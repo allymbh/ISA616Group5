@@ -1,0 +1,121 @@
+---
+title: "BA Student Movement Data Cleaning"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+author: "XX"
+format: 
+  html:
+    toc: true
+    toc-location: left
+    toc-expand: true
+    code-tools: true 
+    code-fold: true
+    code-overflow: scroll
+    self-contained: true
+    #bibliography: winerefs.bib
+---
+
+
+## Package Installation and Initialization
+
+In this portion we use `pacman` to install the necessary packages and clear the global environment.
+
+```{r setup,message=FALSE,warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE,warning=FALSE, out.width = "100%")
+#package initialization
+rm(list = ls()) # clear global environment
+graphics.off() # close all graphics
+if(require(pacman)==FALSE) install.packages("pacman")
+install.packages("openxlsx")
+library(openxlsx)
+pacman::p_load(DataExplorer, # For explorer and cleaning data by visualizing missing values.
+               httr, # For downloading the data from the UCI
+               tidyverse, # For data manipulation
+               corrplot, # for heatmaps
+               DataExplorer, #for exploring data
+               skimr, # for nice summary of data
+               readxl, #to read Excel files
+               networkD3 # to create a Sankey Plot
+               ) # For creating dummy variables of categorical variables automatically.)
+```
+
+## Load data
+
+### Loading BA Students
+
+
+```{r}
+BA_Students=read_excel("BA Major Students.xlsx")
+##write.xlsx(BA_Students,"BA_Students1.xlsx")
+
+```
+
+
+### Loading BA Majors
+
+
+```{r}
+# Read data
+BA_Majors=read_excel("BA Major Students - Majors.xlsx")
+# Fill in the blank cells created from the format of the data
+BA_Majors=BA_Majors %>% 
+  fill(c(`Student ID`:`Term Code`),.direction="down")
+#Create a separate column for each major.  Unit of analysis here is student by Term Code
+BA_Majors=BA_Majors %>% 
+  group_by(`Student ID`,`Term Code`) %>% 
+  mutate(Major_Number=paste("Major",row_number())) %>% 
+  pivot_wider(names_from=Major_Number, values_from=`BA Major`) 
+
+# Set the Cohort Term to the smallest observed value for a given student. 
+BA_Majors=BA_Majors %>% 
+  group_by(`Student ID`) %>% 
+  mutate(`Cohort Term`=min(`Cohort Term`)) 
+
+##write.xlsx(BA_Majors,"BA_Majors1.xlsx")
+```
+
+### Loading Grades
+
+```{r}
+# Read data
+Grades=read_excel("BA Major Students - Grades.xlsx")
+# Fill in the blank cells created from the format of the data
+Grades = Grades %>% 
+  fill(c(`Student ID`),.direction="down")
+##write.xlsx(Grades,"Grades1.xlsx")
+```
+
+### Loading Attributes
+
+```{r}
+# Read data
+Attributes=read_excel("BA Major Students - Attributes and GPA.xlsx")
+# Fill in the blank cells created from the format of the data
+Attributes = Attributes %>% 
+  fill(c(`Student ID`:`First Generation Indicator`),.direction="down")
+
+##write.xlsx(Attributes,"Attributes1.xlsx")
+```
+
+### Loading Degrees Awarded
+
+```{r}
+# Read data
+Degrees=read_excel("BA Major Students - Degrees Awarded.xlsx")
+# Fill in the blank cells created from the format of the data
+Degrees = Degrees %>% 
+  fill(c(`Student ID`),.direction="down")
+
+##write.xlsx(Degrees, "Degrees Awarded1.xlsx")
+```
+
+### Loading Credit Hours
+
+```{r}
+# Read data
+Credits=read_excel("BA Major Students - Credit Hours.xlsx")
+# Fill in the blank cells created from the format of the data
+Credits = Credits %>% 
+  fill(c(`Student ID`),.direction="down")
+
+##write.xlsx(Credits, "Credit Hours1.xlsx")
+```
